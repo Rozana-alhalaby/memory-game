@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   
+    <audio id="audio-blue" src="blue.mp3"></audio>
+<audio id="audio-red" src="red.mp3"></audio>
+<audio id="audio-green" src="green.mp3"></audio>
+<audio id="audio-yellow" src="yellow.mp3"></audio>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: rgb(29, 29, 29);
+            position: relative;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        input {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .submit{
+            margin-top: 10px;
+            padding: 12px;
+            cursor: pointer;
+            background-color: rgb(255, 182, 225);
+            border-radius: 5px;
+        }
+
+        .welcome-frame {
+            background-color:rgb(119, 255, 171);
+            border: 2px solid;
+            border-radius: 15px;
+            width: 52%;
+            padding: 70px;
+            text-align:center;
+            flex-direction: column;
+            justify-content: center;
+            margin: auto;
+            font-family: fantasy;
+            z-index: 2;
+        }
+
+        .boxes-container {
+            display: none;
+            position: absolute;
+            transform: translate(-50%, -50%);
+            top: 50%;
+            left: 50%;
+            z-index: 1;
+        }
+
+        .box {
+            width: 170px;
+            height: 170px;
+            border-radius: 20px;
+            margin: 5px;
+            border: 1px solid;
+           
+            border-width: 2px;
+            border-style: solid;
+            border-color: transparent; /* Initial border color */
+            transition: border-color 0.5s;
+        }
+        .box:hover {
+         border-color: rgba(255, 255, 255, 0.7);
+        }
+        .box-green {
+            background-color: rgb(0, 204, 78);
+            text-align: center;
+            justify-content: center;
+            align-items: center;
+            display: flex;
+            font-size: 30px;
+            color: rgb(117, 162, 162);
+        }
+
+        .box-red {
+            background-color: rgb(255, 54, 54); text-align: center;
+            justify-content: center;
+            align-items: center;
+            display: flex;
+            font-size: 30px;
+            color:  rgb(117, 162, 162);
+        }
+
+        .box-yellow {
+            background-color: rgb(255, 238, 0);
+            text-align: center;
+            justify-content: center;
+            align-items: center;
+            display: flex;
+            font-size: 30px;
+            color: rgb(117, 162, 162);
+        }
+
+        .box-blue {
+            background-color: rgb(0, 110, 255);
+            text-align: center;
+            justify-content: center;
+            align-items: center;
+            display: flex;
+            font-size: 30px;
+            color:rgb(177, 162, 162);
+        }
+
+        .start {
+            color: rgb(93, 255, 93);
+            font-family: Trattatello, fantasy;
+            padding: 10px;
+            position: absolute;
+            top: 23px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 3;
+            display: none; /* Hidden by default */
+            font-size: 35px;
+        }
+
+        .level {
+            color: rgb(93, 255, 93);
+            font-family: Trattatello, fantasy;
+            font-size: 30px;
+            padding: 100px;
+            position: absolute;
+            top: 20px;
+            right: 150px;
+            z-index: 3;
+            display: none; /* Hidden by default */
+        }
+
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+     
+        .box.highlighted {  transform: scale(1.2);
+ 
+  transition: transform 0.5s, background-color 0.5s;
+}
+#timer {
+  margin-top: 15px;
+  font-family: fantasy;
+  font-size: 30px;
+  color: blanchedalmond;
+}
+.game-over {
+  color: red;
+  font-size: 50px;
+}
+    </style>
+    <title>Memory boxes</title>
+</head>
+
+<body>
+    <div class="welcome-frame" id="welcomeFrame">
+        <h1 id="welcomeMessage">HELLO!</h1>
+        <br>
+        <label for="username">
+            <h2> Please enter your username to start</h2>
+        </label>
+        <br>
+        <input type="text" id="username" placeholder="user-1">
+     
+        
+<button class="submit" onclick="submitUsername()">Submit</button>
+
+    </div>
+
+    <div class="boxes-container" id="boxesContainer">
+        <div>
+            <div class="box box-blue"> blue-0</div>
+            <div class="box box-red">red-2</div>
+        </div>
+        <div>
+            <div class="box box-green">green-1</div>
+            <div class="box box-yellow">yellow-3</div>
+        </div>
+    </div>
+
+    <button class="start" id="start" onclick="startGame()">START!</button>
+
+
+    <div class="level" id="level">
+        <h2>Lvl Unknown</h2>
+    </div>
+    <div id="timer"></div>
+<script>
+var boxes = document.getElementsByClassName("box");
+var sequence = [];
+var level = 1;
+var timerInterval;
+var colors = ["rgb(0, 110, 255)", "rgb(255, 54, 54)", "rgb(0, 204, 78)", "rgb(255, 238, 0)"];
+
+var isUserInputEnabled = false;
+
+function submitUsername() {
+  var username = document.getElementById("username").value;
+  if (username.trim() === "") {
+    username = "user-1";
+  }
+
+  document.getElementById("welcomeFrame").style.display = 'none';
+
+  var welcomeMessage = "Welcome to " + username + "!<br>Let's start!";
+  document.getElementById("welcomeMessage").innerHTML = welcomeMessage;
+
+  var tempMessageElement = document.createElement("div");
+  tempMessageElement.innerHTML = welcomeMessage;
+
+  tempMessageElement.style.color = 'rgb(0, 204, 78)';
+  tempMessageElement.style.fontSize = '60px';
+  tempMessageElement.style.fontFamily = 'Trattatello, fantasy';
+  tempMessageElement.style.textAlign = 'center';
+  tempMessageElement.style.margin = 'auto';
+
+  document.body.appendChild(tempMessageElement);
+
+  setTimeout(function () {
+    tempMessageElement.style.display = 'none';
+
+    document.getElementById("start").style.display = 'block';
+    document.getElementById("start").style.backgroundColor = 'transparent';
+
+    document.getElementById("level").style.display = 'block';
+    document.getElementById("level").innerHTML = username + "<br>Lvl unknown";
+
+    document.getElementById("boxesContainer").style.display = 'flex';
+    document.getElementById("start").addEventListener("click", startGame);
+
+    enableSelection();
+    isUserInputEnabled = true;
+  }, 1500);
+}
+
+function startGame() {
+  document.getElementById("start").style.display = "none";
+  level = 1; // Reset the level to 1
+  sequence = []; // Reset the sequence array
+  document.getElementById("level").innerText = "Level: " + level;
+  colorBoxes();
+  playSequence();
+}
+
+
+function colorBoxes() {
+  for (var i = 0; i < boxes.length; i++) {
+    boxes[i].style.backgroundColor = colors[i];
+  }
+}
+function highlightBox(boxIndex) {
+  // Unhighlight all boxes before highlighting the current one
+  unhighlightAllBoxes();
+
+  // Highlight the selected box
+  boxes[boxIndex].classList.add("highlighted");
+}
+
+function unhighlightAllBoxes() {
+  // Unhighlight all boxes
+  for (var i = 0; i < boxes.length; i++) {
+    boxes[i].classList.remove("highlighted");
+  }
+}
+
+
+function unhighlightBox(boxIndex) {
+  // Unhighlight the selected box
+  boxes[boxIndex].style.backgroundColor = colors[boxIndex];
+  boxes[boxIndex].classList.remove("highlighted");
+}
+
+// ...
+
+function playSequence() {
+  var randomBox = Math.floor(Math.random() * 4);
+  sequence.push(randomBox);
+
+  highlightBox(randomBox);
+
+  setTimeout(function () {
+    unhighlightBox(randomBox);
+
+    if (sequence.length === level) {
+      startTimer();
+      enableSelection();
+    }
+  }, 1000);
+
+  // Reset sequence and level after winning the first level
+  if (level === 1 && sequence.length === 1) {
+    document.getElementById("level").innerText = "Level: " + ++level;
+  }
+}
+
+
+function stopTimer() {
+  clearInterval(timerInterval);
+}
+
+function enableSelection() {
+  for (var i = 0; i < boxes.length; i++) {
+    boxes[i].addEventListener("click", handleBoxClick);
+  }
+}
+
+function disableSelection() {
+  for (var i = 0; i < boxes.length; i++) {
+    boxes[i].removeEventListener("click", handleBoxClick);
+  }
+}
+
+
+
+
+
+function handleBoxClick(event) {
+            var selectedBoxIndex = Array.from(boxes).indexOf(event.target);
+            playBoxAudio(selectedBoxIndex);
+            checkSelection(selectedBoxIndex);
+        }
+
+        function playBoxAudio(boxIndex) {
+            switch (boxIndex) {
+                case 0:
+                    document.getElementById("audio-blue").play();
+                    break;
+                case 1:
+                    document.getElementById("audio-red").play();
+                    break;
+                case 2:
+                    document.getElementById("audio-green").play();
+                    break;
+                case 3:
+                    document.getElementById("audio-yellow").play();
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        function checkSelection(selectedBoxIndex) {
+  var expectedBoxIndex = sequence.shift();
+
+  console.log("Expected:", expectedBoxIndex, "Selected:", selectedBoxIndex);
+
+  if (selectedBoxIndex === expectedBoxIndex) {
+    if (sequence.length === 0) {
+      // User completed the sequence for this level
+      level++;
+      stopTimer();
+
+      showMessage("You Win!", true);
+      document.getElementById("level").innerText = "Level: " + level;
+      setTimeout(function () {
+        colorBoxes();
+        playSequence();
+        startTimer(); // Start the timer for the new level
+      }, 1000);
+    }
+  } else {
+    // If the selected box is incorrect
+    setTimeout(function () {
+      gameOver(false);
+    }, 100); // Adjust the delay as needed
+  }
+}
+
+
+function gameOver(win) {
+  stopTimer();
+  disableSelection();
+
+  var timerElement = document.getElementById("timer");
+  timerElement.innerText = "";
+
+  if (!win) {
+    showMessage("Game Over!", false);
+  } else {
+    showMessage("YOU WIN!", true);
+  }
+}
+function startTimer() {
+  clearInterval(timerInterval);
+var count = 5; // Adjust the timer based on the level
+  var timerElement = document.getElementById("timer");
+  timerElement.innerText = "Time: " + count;
+
+  timerInterval = setInterval(function () {
+    count--;
+    timerElement.innerText = "Time: " + count;
+
+    if (count === 0) {
+      gameOver(false);
+    }
+  }, 1000);
+}
+
+function showMessage(messageText, win) {
+  var message = document.createElement("h2");
+  message.className = "game-message";
+
+  if (win) {
+    message.innerText = "🎉 " + messageText + " 🎉"; // Add celebration emojis
+    message.style.color = "green";
+    
+  } else {
+    message.innerText = "😞 " + messageText + " 😞"; // Add sad emojis
+    message.style.color = "red";
+    playGameOverSound(); 
+  }
+
+  message.style.fontSize = "30px";
+  message.style.fontFamily = "Trattatello, fantasy";
+  message.style.textAlign = "center";
+  message.style.marginTop = "8px"; // Adjust as needed
+
+  document.body.appendChild(message);
+
+  // Remove the message after 1 seconds(adjust the time as needed)
+  setTimeout(function () {
+    message.remove();
+  }, 1000);
+}
+
+
+
+
+
+function playGameOverSound() {
+  
+  // For example, you can use the Audio API
+  var audio = new Audio('wrong.mp3');
+  audio.play();
+}
+</script>
+</body>
+</html>
